@@ -34,6 +34,23 @@ async function run() {
     const db = client.db("EcoTrackUser");
     const usersCollection = db.collection("users");
     const liveStatisticsCollection = db.collection("statistics");
+    const upcomingEventCollection = db.collection("upcomingEvent");
+
+
+    // upcoming event
+    app.get("/upcomingEvents", async (req, res) => {
+      const query = {};
+      const cursor = upcomingEventCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.post("/upcomingEvents", async (req, res) => {
+      const upcomingEvent = req.body;
+      const result = await upcomingEventCollection.insertMany(upcomingEvent);
+      res.send(result);
+    });
+
 
     // Statistics
     app.post("/statistics", async (req, res) => {
