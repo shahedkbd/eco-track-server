@@ -35,6 +35,22 @@ async function run() {
     const usersCollection = db.collection("users");
     const liveStatisticsCollection = db.collection("statistics");
     const upcomingEventCollection = db.collection("upcomingEvent");
+    const communityTipsCollection = db.collection("tips");
+
+
+    // Community tips
+    app.get("/tips", async (req, res) => {
+      const query = {};
+      const cursor = communityTipsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.post("/tips", async (req, res) => {
+      const communityTips = req.body;
+      const result = await communityTipsCollection.insertMany(communityTips);
+      res.send(result);
+    });
 
 
     // upcoming event
