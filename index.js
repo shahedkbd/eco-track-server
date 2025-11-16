@@ -37,7 +37,125 @@ async function run() {
     const upcomingEventCollection = db.collection("upcomingEvent");
     const communityTipsCollection = db.collection("tips");
     const userActivityCollection = db.collection("activity");
+const allChallengesCollection = db.collection("challenges");
+    const heroBannerCollection = db.collection("hero");
 
+    // Hero Banner
+    app.post("/hero", async (req, res) => {
+      const banner = req.body;
+      const result = await heroBannerCollection.insertOne(banner);
+      res.send(result);
+    });
+
+    app.get("/hero", async (req, res) => {
+      const query = {};
+      const cursor = heroBannerCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    
+
+    // All Challenges
+    app.get("/challenges", async (req, res) => {
+      const { category, startDate, endDate, minParticipants, maxParticipants } =
+        req.query;
+      let filter = {};
+
+      if (category) {
+        const categories = category.split(",");
+        filter.category = { $in: categories };
+      }
+
+      if (startDate && endDate) {
+        filter.startDate = {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate),
+        };
+      }
+
+      if (minParticipants && maxParticipants) {
+        filter.participants = {
+          $gte: parseInt(minParticipants),
+          $lte: parseInt(maxParticipants),
+        };
+      } else if (minParticipants) {
+        filter.participants = { $gte: parseInt(minParticipants) };
+      } else if (maxParticipants) {
+        filter.participants = { $lte: parseInt(maxParticipants) };
+      }
+
+      const result = await allChallengesCollection.find(filter).toArray();
+      res.send(result);
+    });
+
+    app.get("/ongoing-challenges", async (req, res) => {
+      const query = { status: "Ongoing" };
+      const cursor = allChallengesCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/challenges/:id", async (req, res) => {
+      const id = req.params.id;
+
+      // id valid ObjectId kina check
+      if (!ObjectId.isValid(id)) {
+        return res.status(404).send({ error: "Invalid ID" });
+      }
+
+      const result = await allChallengesCollection.findOne({
+        _id: new ObjectId(id),
+      });
+
+      if (!result) {
+        return res.status(404).send({ error: "Not Found" });
+      }
+
+      res.send(result);
+    });
+
+    app.post("/challenges", async (req, res) => {
+      const newChallenge = req.body;
+      const result = await allChallengesCollection.insertOne(newChallenge);
+      res.send(result);
+    });
+
+    // Participants increment + store user Data
+    app.patch("/challenges/join/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const user = req.body;
+        const filter = { _id: new ObjectId(id) };
+
+        const update = {
+          $inc: { participants: 1 },
+        };
+        const result = await allChallengesCollection.updateOne(filter, update);
+
+        // User Activity Store
+        const activity = {
+          challengeId: id,
+          title: user.title,
+          image: user.image,
+          userEmail: user.email,
+          userName: user.name,
+          joinAt: new Date(),
+          type: "Ongoing",
+        };
+
+        await userActivityCollection.insertOne(activity);
+        res.send({
+          success: true,
+          joined: true,
+        });
+      } catch (error) {
+        console.log(error);
+        res
+          .status(500)
+          .send({ success: false, message: "Something went wrong" });
+      }
+    });
 
     // Update activity progress
     app.patch("/my-activities/progress/:id", async (req, res) => {
