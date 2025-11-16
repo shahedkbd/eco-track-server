@@ -36,7 +36,70 @@ async function run() {
     const liveStatisticsCollection = db.collection("statistics");
     const upcomingEventCollection = db.collection("upcomingEvent");
     const communityTipsCollection = db.collection("tips");
+    const userActivityCollection = db.collection("activity");
 
+
+    // Update activity progress
+    app.patch("/my-activities/progress/:id", async (req, res) => {
+      const { id } = req.params;
+      const { progress } = req.body;
+
+      try {
+        // Update progress and automatically set status
+        const updatedActivity = await userActivityCollection.findOneAndUpdate(
+          { _id: new ObjectId(id) },
+          {
+            $set: {
+              progress: Number(progress),
+              type: Number(progress) === 100 ? "Completed" : "Ongoing",
+            },
+          },
+          { returnDocument: "after" }
+        );
+
+        res.json(updatedActivity.value);
+      } catch (err) {
+        res
+          .status(500)
+          .json({ message: "Error updating progress", error: err });
+      }
+    });
+
+    // User Activity
+    app.get("/my-activities", async (req, res) => {
+      const email = req.query.email;
+      const query = { userEmail: email };
+      const activities = await userActivityCollection.find(query).toArray();
+      res.send(activities);
+    });
+
+    app.get("/my-activities/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const activities = await userActivityCollection.find(query).toArray();
+      res.send(activities);
+    });
+
+    app.delete("/my-activities/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userActivityCollection.deleteOne(query);
+      res.send(result, { success: true });
+    });
+
+    // Check Joined State
+    app.get("/challenges/isJoined/:id", async (req, res) => {
+      const { id } = req.params;
+      const { email } = req.query;
+
+      const activity = await userActivityCollection.findOne({
+        challengeId: id,
+        userEmail: email,
+        type: "Ongoing",
+      });
+
+      res.send({ joined: !!activity });
+    });
 
     // Community tips
     app.get("/tips", async (req, res) => {
