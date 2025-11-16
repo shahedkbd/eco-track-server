@@ -62,6 +62,21 @@ async function run() {
       }
     });
 
+
+    app.patch("/users", async (req, res) => {
+      const id = req.params.id;
+      const updatedUserData = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: {
+          name: updatedUserData.name,
+          password: updatedUserData.password,
+        },
+      };
+      const result = await usersCollection.updateOne(query, update);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
