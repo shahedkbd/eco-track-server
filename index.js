@@ -32,9 +32,29 @@ async function run() {
 
     // user + Collections
     const db = client.db("EcoTrackUser");
-      const usersCollection = db.collection("users");
+    const usersCollection = db.collection("users");
+    const liveStatisticsCollection = db.collection("statistics");
 
-      // Users API
+    // Statistics
+    app.post("/statistics", async (req, res) => {
+      const statsData = {
+        totalCO2Saved: 3580,
+        totalPlasticReduced: 1245,
+        totalChallengesJoined: 870,
+        totalUsers: 415,
+      };
+      const result = await liveStatisticsCollection.insertOne(statsData);
+      res.send(result);
+    });
+
+    app.get("/statistics", async (req, res) => {
+      const query = {};
+      const cursor = liveStatisticsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // Users API
     app.get("/users", async (req, res) => {
       const email = req.query.email;
       const query = {};
@@ -45,7 +65,6 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
-
 
     app.post("/users", async (req, res) => {
       const newUser = req.body;
@@ -61,7 +80,6 @@ async function run() {
         res.send(result);
       }
     });
-
 
     app.patch("/users", async (req, res) => {
       const id = req.params.id;
