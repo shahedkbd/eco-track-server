@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     // user + Collections
     const db = client.db("EcoTrackUser");
@@ -37,7 +37,7 @@ async function run() {
     const upcomingEventCollection = db.collection("upcomingEvent");
     const communityTipsCollection = db.collection("tips");
     const userActivityCollection = db.collection("activity");
-const allChallengesCollection = db.collection("challenges");
+    const allChallengesCollection = db.collection("challenges");
     const heroBannerCollection = db.collection("hero");
 
     // Hero Banner
@@ -53,8 +53,6 @@ const allChallengesCollection = db.collection("challenges");
       const result = await cursor.toArray();
       res.send(result);
     });
-
-    
 
     // All Challenges
     app.get("/challenges", async (req, res) => {
@@ -233,7 +231,6 @@ const allChallengesCollection = db.collection("challenges");
       res.send(result);
     });
 
-
     // upcoming event
     app.get("/upcomingEvents", async (req, res) => {
       const query = {};
@@ -247,7 +244,6 @@ const allChallengesCollection = db.collection("challenges");
       const result = await upcomingEventCollection.insertMany(upcomingEvent);
       res.send(result);
     });
-
 
     // Statistics
     app.post("/statistics", async (req, res) => {
@@ -310,7 +306,7 @@ const allChallengesCollection = db.collection("challenges");
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
