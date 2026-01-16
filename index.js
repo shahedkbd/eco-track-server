@@ -181,6 +181,14 @@ async function run() {
       }
     });
 
+    //all user Activity
+    app.get("/activity", async (req, res) => {
+      const query = {};
+      const cursor = userActivityCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     // User Activity
     app.get("/my-activities", async (req, res) => {
       const email = req.query.email;
@@ -276,6 +284,21 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await usersCollection.findOne({ email });
+
+      if (!user) {
+        return res.status(404).send({ message: "User not found" });
+      }
+
+      if (user.role !== "admin") {
+        return res.status(403).send({ message: "Forbidden" });
+      }
+
+      return res.send(user);
+    });
+
     app.post("/users", async (req, res) => {
       const newUser = req.body;
       const email = req.body.email;
@@ -301,6 +324,19 @@ async function run() {
           password: updatedUserData.password,
         },
       };
+      const result = await usersCollection.updateOne(query, update);
+      res.send(result);
+    });
+
+    app.patch("/users/role/:id", async (req, res) => {
+      const id = req.params.id;
+      const { role } = req.body;
+
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: { role },
+      };
+
       const result = await usersCollection.updateOne(query, update);
       res.send(result);
     });
